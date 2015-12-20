@@ -8,20 +8,19 @@
 #
 
 #
-# Try to find Libube
+# Try to find LibUBE; see
+#  https://cmake.org/Wiki/CMake:How_To_Find_Libraries
 # Once done this will define
 #  LIBUBE_FOUND          - System has libube
-#  LIBUBE_INCLUDE_DIR    - The libube include directory
+#  LIBUBE_INCLUDE_DIRS   - The libube include directory
 #  LIBUBE_LIBRARIES      - The libraries needed to use Libube
 #  LIBUBE_DEFINITIONS    - Compiler switches required for using libube
-#  LIBUBE_VERSION_STRING - the version of libube found
 #
 
 find_package(PkgConfig)
 pkg_check_modules(PC_LIBUBE QUIET libube)
 
 set(LIBUBE_DEFINITIONS ${PC_LIBUBE_CFLAGS_OTHER})
-set(LIBUBE_VERSION_STRING ${PC_LIBUBE_VERSION})
 
 find_path(
   LIBUBE_INCLUDE_DIR lube.h
@@ -30,16 +29,17 @@ find_path(
 )
 
 find_library(
-  LIBUBE_LIBRARIES ube
+  LIBUBE_LIBRARY ube
   HINTS ${PC_LIBUBE_LIBDIR} ${PC_LIBUBE_LIBRARY_DIRS}
 )
-list(APPEND LIBUBE_LIBRARIES ${CMAKE_DL_LIBS})
+
+set(LIBUBE_LIBRARIES ${LIBUBE_LIBRARY} ${CMAKE_DL_LIBS})
+set(LIBUBE_INCLUDE_DIRS ${LIBUBE_INCLUDE_DIR})
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
-  Libube
-  REQUIRED_VARS LIBUBE_LIBRARIES LIBUBE_INCLUDE_DIR
-  VERSION_VAR LIBUBE_VERSION_STRING
+  LibUBE DEFAULT_MSG
+  LIBUBE_LIBRARY LIBUBE_INCLUDE_DIR
 )
 
-mark_as_advanced(LIBUBE_INCLUDE_DIR LIBUBE_LIBRARIES)
+mark_as_advanced(LIBUBE_INCLUDE_DIR LIBUBE_LIBRARY)
