@@ -20,18 +20,7 @@ find_package(LibUBE REQUIRED)
 include_directories(${LIBUBE_INCLUDE_DIR})
 set(TARGET_LIBS ${LIBUBE_LIBRARIES})
 
-add_library(shared-lib SHARED
-  ssp.cpp
-  ar.cpp
-  pitch.cpp
-  arcodec.cpp
-  )
-set_target_properties(shared-lib
-  PROPERTIES OUTPUT_NAME "ssp"
-  PUBLIC_HEADER "ssp.h"
-  )
-target_link_libraries(shared-lib ${TARGET_LIBS})
-list(APPEND LIBUBE_TARGETS shared-lib)
+add_subdirectory(ssp)
 
 add_executable(waveplot waveplot.cpp)
 target_link_libraries(waveplot shared-lib)
@@ -41,14 +30,6 @@ target_link_libraries(specplot shared-lib)
 
 add_executable(varcoder varcoder.cpp)
 target_link_libraries(varcoder shared-lib)
-
-# HTK file module
-add_library(htk-lib MODULE htkfile.cpp)
-target_link_libraries(htk-lib)
-set_target_properties(htk-lib
-  PROPERTIES OUTPUT_NAME "htk"
-  )
-list(APPEND MODULE_TARGETS htk-lib)
 
 enable_testing()
 add_subdirectory(test)

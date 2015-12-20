@@ -8,8 +8,8 @@
  */
 
 #include <lube.h>
-#include "ssp.h"
-#include "ar.h"
+#include "ssp/ssp.h"
+#include "ssp/ar.h"
 
 using namespace std;
 using namespace ssp;

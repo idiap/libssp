@@ -9,7 +9,7 @@
 
 #include <lube.h>
 #include <lube/config.h>
-#include "arcodec.h"
+#include "ssp/arcodec.h"
 
 using namespace std;
 using namespace ssp;
