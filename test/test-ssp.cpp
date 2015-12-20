@@ -16,11 +16,15 @@ using namespace ssp;
 
 int main(int argc, char** argv)
 {
+    // Set the FP precision to be less than the difference between different
+    // numerical libraries
+    std::cout.precision(4);
+
     var arg(argc, argv);
     cout << "Args: " << arg << endl;
 
     PCM pcm;
-    var a = pcm.read("arctic_a0001.wav");
+    var a = pcm.read(TEST_DIR "/test.wav");
     std::cout << "a is size: " << a.shape() << std::endl;
 
     Frame frame(4, 2);

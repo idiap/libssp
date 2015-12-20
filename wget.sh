@@ -10,14 +10,17 @@
 
 # CMake finders
 gitraw=https://raw.githubusercontent.com
-if [ ! -e FindLibUBE.cmake ]
+if [ ! -e cmake/FindLibUBE.cmake ]
 then
     wget $gitraw/pgarner/libube/master/cmake/FindLibUBE.cmake
+    mkdir -p cmake
+    mv FindLibUBE.cmake cmake
 fi
 
 # Download a test file
-if [ ! -e arctic_a0001.wav ]
+if [ ! -e test/test.wav ]
 then
     arctic=http://www.speech.cs.cmu.edu/cmu_arctic
     wget $arctic/cmu_us_bdl_arctic/wav/arctic_a0001.wav
+    mv arctic_a0001.wav test/test.wav
 fi

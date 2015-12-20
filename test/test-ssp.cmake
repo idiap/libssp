@@ -9,7 +9,7 @@
 
 # Set up the test to compare reference and output files
 set(CMD ./test-ssp)
-set(REF test-ssp-ref.txt)
+set(REF ${TEST_DIR}/test-ssp-ref.txt)
 set(OUT test-ssp-out.txt)
 
 # Run the test

@@ -9,15 +9,15 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-project(varcoder)
+project(libssp)
 set(VERSION 0.1)
 
 set(CMAKE_CXX_FLAGS "-Wall -Werror -std=c++11")
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}")
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include_directories(${CMAKE_SOURCE_DIR})
 
 find_package(LibUBE REQUIRED)
 include_directories(${LIBUBE_INCLUDE_DIR})
-
 set(TARGET_LIBS ${LIBUBE_LIBRARIES})
 
 add_library(shared-lib SHARED
@@ -50,16 +50,5 @@ set_target_properties(htk-lib
   )
 list(APPEND MODULE_TARGETS htk-lib)
 
-# Testing
-#
-# The tests get built here, but they are run from a different cmake
-# file.  This lets us compare output with a reference output rather
-# than just test that something runs.
 enable_testing()
-
-add_executable(test-ssp test-ssp.cpp)
-target_link_libraries(test-ssp shared-lib)
-add_test(
-  NAME ssp
-  COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/test-ssp.cmake
-  )
+add_subdirectory(test)
