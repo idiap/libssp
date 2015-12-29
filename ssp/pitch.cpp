@@ -130,8 +130,8 @@ PitchHNR::PitchHNR(PCM* iPCM, var iLo, var iHi)
     mLo = iLo;
     mHi = iHi;
     mPCM = iPCM;
-    mLoBin = mPCM->samplesFromSeconds(var(1.0f) / mHi);
-    mHiBin = mPCM->samplesFromSeconds(var(1.0f) / mLo);
+    mLoBin = mPCM->secondsToSamples(var(1.0f) / mHi);
+    mHiBin = mPCM->secondsToSamples(var(1.0f) / mLo);
 };
 
 void PitchHNR::vector(var iVar, var& oVar) const
@@ -149,7 +149,7 @@ void PitchHNR::vector(var iVar, var& oVar) const
     else
         hnr = fnac / (1.0f - fnac);
     float range = (mHi-mLo).cast<float>();
-    oVar[0] = var(1.0f) / mPCM->secondsFromSamples(pit);
+    oVar[0] = var(1.0f) / mPCM->samplesToSeconds(pit);
     oVar[1] = 1.0f / hnr * range * range;
 }
 
@@ -210,7 +210,7 @@ var ssp::excitation(var iPitch, var iHNR, PCM* iPCM)
     int f = 0;
     while ((i < nSamples) && (f < nFrames))
     {
-        int period = iPCM->samplesFromSeconds(var(1.0) / iPitch[f]);
+        int period = iPCM->secondsToSamples(var(1.0) / iPitch[f]);
         if (i + period > nSamples)
             break;
         h[i] = sqrt((float)period);

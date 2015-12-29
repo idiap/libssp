@@ -1,0 +1,13 @@
+A is: 0.981748
+Centre 0: 100, erb: 35.4939
+Centre 1: 159.683, erb: 41.936
+Centre 2: 254.19, erb: 52.137
+Centre 3: 403.839, erb: 68.29
+Centre 4: 640.806, erb: 93.8679
+Centre 5: 1016.04, erb: 134.37
+Centre 6: 1610.21, erb: 198.504
+Centre 7: 2551.07, erb: 300.059
+Centre 8: 4040.89, erb: 460.87
+Centre 9: 6400, erb: 715.509
+Shape: {10, 2048}
+Norm: {10, 1025}

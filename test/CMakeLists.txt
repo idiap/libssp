@@ -22,3 +22,10 @@ add_test(
   NAME ssp
   COMMAND ${CMAKE_COMMAND} -D TEST_DIR=${TEST_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/test-ssp.cmake
   )
+
+add_executable(test-cochlea test-cochlea.cpp)
+target_link_libraries(test-cochlea shared-lib)
+add_test(
+  NAME cochlea
+  COMMAND ${CMAKE_COMMAND} -D TEST_DIR=${TEST_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/test-cochlea.cmake
+  )

@@ -23,9 +23,9 @@ var ARCodec::encode(var iSignal)
 {
     // Frame and window.  The window should be asymmetric, so ask for one too
     // long, then pop off the last sample.
-    int framePeriod = mPCM->samplesFromSeconds(0.005, PCM::AT_LEAST);
+    int framePeriod = mPCM->secondsToSamples(0.005, PCM::AT_LEAST);
     int frameSize = framePeriod * 2;
-    int pitchSize = mPCM->samplesFromSeconds(0.025, PCM::AT_LEAST);
+    int pitchSize = mPCM->secondsToSamples(0.025, PCM::AT_LEAST);
     Frame frame(frameSize, framePeriod);
     var f = frame(iSignal);
     var w = hanning(frameSize+1);

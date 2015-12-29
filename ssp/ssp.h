@@ -17,6 +17,9 @@
 
 namespace ssp
 {
+    // Constants
+    const double PI = lube::atan(1.0).cast<double>()*4;
+
     /**
      * PCM class
      *
@@ -38,13 +41,11 @@ namespace ssp
         void write(var iFileName, var iVar);
         var frame(var iVar, int iSize, int iPeriod, bool iPad=true);
         float rate() { return mAttr["rate"].cast<float>(); };
-        float radiansFromHertz(var iHertz);
-        int dftBinFromHertz(var iHertz);
-        float hertzFromDFTBin(var iBin);
-        int samplesFromSeconds(var iSeconds, ind iPower=-1);
-        float secondsFromSamples(var iSamples);
-
-        const double PI = lube::atan(1.0).cast<double>()*4;
+        float hzToRadians(var iHz);
+        int hzToDFTBin(var iHz);
+        float dftBinToHz(var iBin);
+        int secondsToSamples(var iSeconds, ind iPower=-1);
+        float samplesToSeconds(var iSamples);
     private:
         var mAttr;
     };

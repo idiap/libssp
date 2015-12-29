@@ -12,6 +12,7 @@ add_library(shared-lib SHARED
   ar.cpp
   pitch.cpp
   arcodec.cpp
+  cochlea.cpp
   )
 set_target_properties(shared-lib
   PROPERTIES OUTPUT_NAME "ssp"

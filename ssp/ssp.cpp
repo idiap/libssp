@@ -82,18 +82,18 @@ var PCM::frame(var iVar, int iSize, int iPeriod, bool iPad)
     return frame.view({nFrames, iSize});
 }
 
-float PCM::radiansFromHertz(var iHertz)
+float PCM::hzToRadians(var iHz)
 {
-    return iHertz.cast<float>() / rate() * PI * 2;
+    return iHz.cast<float>() / rate() * PI * 2;
 }
 
-int PCM::dftBinFromHertz(var iHertz)
+int PCM::hzToDFTBin(var iHz)
 {
-    var r = iHertz / rate() * mAttr["frameSize"].cast<float>() + 0.5;
+    var r = iHz / rate() * mAttr["frameSize"].cast<float>() + 0.5;
     return r.cast<int>();
 }
 
-float PCM::hertzFromDFTBin(var iBin)
+float PCM::dftBinToHz(var iBin)
 {
     return rate() * iBin.cast<int>() / mAttr["frameSize"].cast<float>();
 }
@@ -103,7 +103,7 @@ float PCM::hertzFromDFTBin(var iBin)
  * AT_LEAST then it is rounded up to the next power of 2; AT_MOST rounds down
  * to the previous power of 2.
  */
-int PCM::samplesFromSeconds(var iSeconds, ind iPower)
+int PCM::secondsToSamples(var iSeconds, ind iPower)
 {
     int samples = iSeconds.cast<float>() * rate();
     if (!iPower)
@@ -117,7 +117,7 @@ int PCM::samplesFromSeconds(var iSeconds, ind iPower)
     return s/2;
 }
 
-float PCM::secondsFromSamples(var iSamples)
+float PCM::samplesToSeconds(var iSamples)
 {
     var r = iSamples.cast<float>() / rate();
     return r.cast<float>();
