@@ -28,18 +28,48 @@ int main(int argc, char** argv)
 
     // Stick noise through a cochlea
     Cochlea c(100, rate/2*0.8f, nFilters, period);
-    var noise = normal(nSamples, 0.0f, 1.0f);
-    var filter = lube::view({nSamples, nFilters}, 0.0f);
-    float* n = noise.ptr<float>();
-    float* f = filter.ptr<float>();
+    lube::DFT dft(nSamples, 0.0f);
+#if 1
+    // Use noise; a window will be necessary
+    int nAverage = 100;
+    var filter = lube::view({nFilters, nSamples/2+1}, 0.0f);
+    var w = nuttall(nSamples);
+    filter *= 0.0f;
+    cout << "Filter: " << filter.shape() << endl;
+    for (int i=0; i<nAverage; i++)
+    {
+        var noise = normal(nSamples, 0.0f, 1.0f) / sqrt(nSamples);
+        noise *= w;
+        var nfilt = lube::view({nSamples, nFilters}, 0.0f);
+        nfilt *= 0.0f;
+        float* n = noise.ptr<float>();
+        float* f = nfilt.ptr<float>();
+        for (int s=0; s<nSamples; s++)
+            c(n[s], &f[s*nFilters]);
+
+        // Filter rows are channels; transpose so they're samples and DFT
+        nfilt.transpose();
+        var t = dft(nfilt);
+        var d = lube::norm(t);
+        filter += d;
+    }
+    var d = (filter / nAverage).log() / lube::log(10.0f) * 10.0f;
+#else
+    // Use impulse; no window is necessary
+    var impulse(nSamples, 0.0f);
+    impulse[0] = 1.0f;
+    var ifilter = lube::view({nSamples, nFilters}, 0.0f);
+    ifilter *= 0.0f;
+    float* n = impulse.ptr<float>();
+    float* f = ifilter.ptr<float>();
     for (int s=0; s<nSamples; s++)
         c(n[s], &f[s*nFilters]);
 
-    filter.transpose();
-    cout << "Shape: " << filter.shape() << endl;
-    lube::DFT dft(nSamples, 0.0f);
-    var t = dft(filter);
+    // Filter rows are channels; transpose so they're samples and DFT
+    ifilter.transpose();
+    var t = dft(ifilter);
     var d = lube::norm(t).log() / lube::log(10.0f) * 10.0f;
+#endif
     cout << "Norm: " << d.shape() << endl;
 
     // XScale
@@ -50,7 +80,13 @@ int main(int argc, char** argv)
     // Plot it; ...which turns out to be a bit of a faff
     var gnu;
     gnu.push("set grid");
+    gnu.push("set xlabel \"Frequency\"");
+    gnu.push("set ylabel \"dB\"");
     gnu.push("set nokey");
+#if 0
+    gnu.push("set logscale x");
+    gnu.push("set xrange [30:8000]");
+#endif
     gnu.push("set style data lines");
     varstream vs;
     vs << "plot \"-\" using 1:2";

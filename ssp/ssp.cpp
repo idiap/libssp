@@ -339,7 +339,7 @@ void Filter::vector(var iVar, var& oVar) const
 
 var ssp::normal(int iSize, float iMean, float iStdDev)
 {
-    std::default_random_engine generator;
+    static std::default_random_engine generator;
     std::normal_distribution<float> distribution(iMean, iStdDev);
     var r(iSize, 0.0f);
     for (int i=0; i<iSize; i++)
