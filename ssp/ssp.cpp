@@ -282,10 +282,9 @@ Autocorrelation::Autocorrelation(int iSize)
 
 void Autocorrelation::scalar(const var& iVar, var& oVar) const
 {
-    // MKL doesn't do any division by N, so we need two here.
     var tmp = mDFT(iVar);
     tmp.norm();
-    tmp /= mSize*mSize;
+    tmp /= mSize;
     mIDFT(tmp, oVar);
 }
 
