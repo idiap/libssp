@@ -8,6 +8,7 @@
  */
 
 #include <cmath>
+#include <cassert>
 #include <iostream>
 #include "ssp.h"
 #include "cochlea.h"
@@ -17,11 +18,24 @@ using namespace ssp;
 using namespace lube;
 
 
-Cochlea::Cochlea(float iMinHz, float iMaxHz, int iNFilters, float iPeriod)
+Cochlea::Cochlea(
+    float iMinHz, float iMaxHz, int iNFilters, float iPeriod, int iType
+)
 {
     // Allocate the filters
     mNFilters = iNFilters;
-    mFilter = new Holdsworth[mNFilters];
+    mType = iType;
+    switch (mType)
+    {
+    case BPF_HOLDSWORTH:
+        mFilter = new Holdsworth[mNFilters];
+        break;
+    case BPF_LYON:
+        mFilter = new Lyon[mNFilters];
+        break;
+    default:
+        assert(0);
+    }
 
     // Calculate the centre frequencies equally spaced on ERB rate scale
     float minRate = hzToERBRate(iMinHz);
@@ -36,7 +50,17 @@ Cochlea::Cochlea(float iMinHz, float iMaxHz, int iNFilters, float iPeriod)
              << ": " << hz
              << ", erb: " << erb
              << endl;
-        mFilter[i].set(hz, erb, iPeriod);
+        switch (mType)
+        {
+        case BPF_HOLDSWORTH:
+            dynamic_cast<Holdsworth*>(mFilter)[i].set(hz, erb, iPeriod);
+            break;
+        case BPF_LYON:
+            dynamic_cast<Lyon*>(mFilter)[i].set(hz, erb, iPeriod);
+            break;
+        default:
+            assert(0);
+        }
     }
 }
 
@@ -74,8 +98,19 @@ float Cochlea::erbRateToHz(float iRate)
 float* Cochlea::operator ()(float iSample, float* oFilter)
 {
     // Call the filter for each bank; could be parallel.
-    for (int f=0; f<mNFilters; f++)
-        oFilter[f] = mFilter[f](iSample);
+    switch (mType)
+    {
+    case BPF_HOLDSWORTH:
+        for (int f=0; f<mNFilters; f++)
+            oFilter[f] = dynamic_cast<Holdsworth*>(mFilter)[f](iSample);
+        break;
+    case BPF_LYON:
+        for (int f=0; f<mNFilters; f++)
+            oFilter[f] = dynamic_cast<Lyon*>(mFilter)[f](iSample);
+        break;
+    default:
+        assert(0);
+    }
     return oFilter;
 }
 
@@ -89,20 +124,17 @@ static int factorial(int iN)
     return ret;
 }
 
-Holdsworth::Holdsworth()
+float CochlearBPF::bwScale(int iOrder)
 {
-    set(0.0f, 0.0f, 0.0f);
-}
-
-float Holdsworth::bwScale()
-{
+    // This will break if two types of filter use it for different orders in
+    // the same instance
     static bool init = false;
     static float a;
     if (!init)
     {
         // Calculate the a_n factor; it's static for a given order
-        float numer = PI * factorial(2*cOrder-2) * std::pow(2.0f,-(2*cOrder-2));
-        float denom = std::pow(factorial(cOrder-1), 2);
+        float numer = PI * factorial(2*iOrder-2) * std::pow(2.0f,-(2*iOrder-2));
+        float denom = std::pow(factorial(iOrder-1), 2);
         a = numer / denom;
         init = true;
         cout << "A is: " << a << endl;
@@ -110,14 +142,19 @@ float Holdsworth::bwScale()
     return a;
 }
 
+Holdsworth::Holdsworth()
+{
+    set(0.0f, 0.0f, 0.0f);
+}
+
 void Holdsworth::set(float iHz, float iBW, float iPeriod)
 {
     mCentre = iHz;
-    mCoeff = 1.0f - std::exp(-2.0f*PI*iBW/bwScale()*iPeriod);
+    mCoeff = 1.0f - std::exp(-2.0f*PI*iBW/bwScale(cOrder)*iPeriod);
     mShift = std::exp(cfloat(0.0f, 2.0f*PI*iHz*iPeriod));
     mDShift = 1.0f;
     mUShift = 1.0f;
-    for (int j=0; j<cOrder; j++)
+    for (int j=0; j<cOrder+1; j++)
         mState[j] = 0.0f;
 }
 
@@ -128,13 +165,13 @@ float Holdsworth::operator ()(float iSample)
 
     // Filter
     cfloat w;
-    for (int i=1; i<cOrder; i++)
+    for (int i=1; i<cOrder+1; i++)
     {
         w = mState[i] + mCoeff * (mState[i-1] - mState[i]);
         mState[i-1] = z;
         z = w;
     }
-    mState[cOrder-1] = z;
+    mState[cOrder] = z;
 
     // Shift back up to center frequency
     float ret = (mUShift * w).real();
@@ -145,4 +182,46 @@ float Holdsworth::operator ()(float iSample)
 
     // Return the real result
     return ret;
+}
+
+Lyon::Lyon()
+{
+    set(0.0f, 0.0f, 0.0f);
+}
+
+void Lyon::set(float iHz, float iBW, float iPeriod)
+{
+    mCentre = iHz;
+    float e = std::exp(-2.0f*PI*iBW/bwScale(cOrder)*iPeriod);
+    float s = std::sin(2.0f*PI*iHz*iPeriod);
+    float c = std::cos(2.0f*PI*iHz*iPeriod);
+    mCoeff[0] = e*s;
+    mCoeff[1] = e*c*2;
+    mCoeff[2] = -e*e;
+    for (int j=0; j<cOrder+1; j++)
+    {
+        mState[0][j] = 0.0f;
+        mState[1][j] = 0.0f;
+    }
+}
+
+float Lyon::operator ()(float iSample)
+{
+    // Filter
+    float z = iSample;
+    float w;
+    for (int i=1; i<cOrder+1; i++)
+    {
+        w = mCoeff[0] * mState[0][i-1] +
+            mCoeff[1] * mState[0][i] +
+            mCoeff[2] * mState[1][i];
+        mState[1][i-1] = mState[0][i-1];
+        mState[0][i-1] = z;
+        z = w;
+    }
+    mState[1][cOrder] = mState[0][cOrder];
+    mState[0][cOrder] = z;
+
+    // Return the real result
+    return w;
 }

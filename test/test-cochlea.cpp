@@ -27,9 +27,9 @@ int main(int argc, char** argv)
     int nSamples = 2048;
 
     // Stick noise through a cochlea
-    Cochlea c(100, rate/2*0.8f, nFilters, period);
+    Cochlea c(100, rate/2*0.8f, nFilters, period, BPF_HOLDSWORTH);
     lube::DFT dft(nSamples, 0.0f);
-#if 1
+#if 0
     // Use noise; a window will be necessary
     int nAverage = 100;
     var filter = lube::view({nFilters, nSamples/2+1}, 0.0f);
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     gnu.push("set xlabel \"Frequency\"");
     gnu.push("set ylabel \"dB\"");
     gnu.push("set nokey");
-#if 0
+#if 1
     gnu.push("set logscale x");
     gnu.push("set xrange [30:8000]");
 #endif
