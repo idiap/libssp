@@ -9,7 +9,7 @@
 
 #include <cassert>
 
-#include "cblas.h"
+#include <lube/c++blas.h>
 #include "pitch.h"
 
 using namespace ssp;
@@ -98,14 +98,14 @@ long iamax(int iSize, float* iData, int iLoBin=0, int iHiBin=0)
 {
     long lo = iLoBin;
     long hi = iHiBin ? iHiBin : iSize;
-    long m = cblas_isamax(hi-lo, iData+lo, 1);
+    long m = blas::iamax<float>(hi-lo, iData+lo);
     while ( ((m == 0) || (m == hi-lo)) && (lo+1 < hi) )
     {
         if (m == 0)
             lo += 1;
         if (m == hi-lo)
             hi -= 1;
-        m = cblas_isamax(hi-lo, iData+lo, 1);
+        m = blas::iamax<float>(hi-lo, iData+lo);
     }
     return m+lo;
 }
