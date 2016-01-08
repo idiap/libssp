@@ -83,6 +83,7 @@ int main(int argc, char** argv)
     gnu.push("set xlabel \"Frequency\"");
     gnu.push("set ylabel \"dB\"");
     gnu.push("set nokey");
+    gnu.push("set yrange [-100:]");
 #if 1
     gnu.push("set logscale x");
     gnu.push("set xrange [30:8000]");

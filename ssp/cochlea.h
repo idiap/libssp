@@ -86,7 +86,7 @@ namespace ssp
         void set(float iHz, float iBW, float iPeriod);
         float operator ()(float iSample);
     private:
-        static const int cOrder = 1;
+        static const int cOrder = 2;
         float mCentre;
         float mCoeff[3];
         float mState[2][cOrder+1];
