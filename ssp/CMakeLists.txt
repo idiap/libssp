@@ -19,7 +19,7 @@ set_target_properties(shared-lib
   PUBLIC_HEADER "ssp.h"
   )
 target_link_libraries(shared-lib ${TARGET_LIBS})
-list(APPEND LIBUBE_TARGETS shared-lib)
+list(APPEND LIBSSP_TARGETS shared-lib)
 
 # HTK file module
 add_library(htk-lib MODULE htkfile.cpp)
@@ -29,3 +29,17 @@ set_target_properties(htk-lib
   )
 list(APPEND MODULE_TARGETS htk-lib)
 
+# Normal install path for the library
+install(
+  TARGETS ${LIBSSP_TARGETS}
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  PUBLIC_HEADER DESTINATION include
+  )
+
+# Slightly different location for the modules
+install(
+  TARGETS ${MODULE_TARGETS}
+  LIBRARY DESTINATION lib/lube
+  )

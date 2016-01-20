@@ -31,5 +31,28 @@ target_link_libraries(specplot shared-lib)
 add_executable(varcoder varcoder.cpp)
 target_link_libraries(varcoder shared-lib)
 
+set(INSTALL_TARGETS
+  waveplot
+  specplot
+  varcoder
+  )
+
+install(
+  TARGETS ${INSTALL_TARGETS}
+  RUNTIME DESTINATION bin
+  )
+
 enable_testing()
 add_subdirectory(test)
+
+# pkgconfig install lines
+set(PREFIX ${CMAKE_INSTALL_PREFIX})
+set(EXEC_PREFIX "\${prefix}")
+set(LIBDIR "\${exec_prefix}/lib")
+set(INCLUDEDIR "\${prefix}/include")
+configure_file(libssp.pc.in ${CMAKE_CURRENT_BINARY_DIR}/libssp.pc @ONLY)
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/libssp.pc
+  DESTINATION lib/pkgconfig
+  )
