@@ -13,7 +13,7 @@ project(libssp)
 set(VERSION 0.1)
 
 set(CMAKE_CXX_FLAGS "-Wall -Werror -std=c++11")
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include_directories(${CMAKE_SOURCE_DIR})
 
 find_package(LibUBE REQUIRED)
@@ -23,13 +23,13 @@ set(TARGET_LIBS ${LIBUBE_LIBRARIES})
 add_subdirectory(ssp)
 
 add_executable(waveplot waveplot.cpp)
-target_link_libraries(waveplot shared-lib)
+target_link_libraries(waveplot ssp-shared)
 
 add_executable(specplot specplot.cpp)
-target_link_libraries(specplot shared-lib)
+target_link_libraries(specplot ssp-shared)
 
 add_executable(varcoder varcoder.cpp)
-target_link_libraries(varcoder shared-lib)
+target_link_libraries(varcoder ssp-shared)
 
 set(INSTALL_TARGETS
   waveplot

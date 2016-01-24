@@ -7,19 +7,19 @@
 #   Phil Garner, December 2013
 #
 
-add_library(shared-lib SHARED
+add_library(ssp-shared SHARED
   ssp.cpp
   ar.cpp
   pitch.cpp
   arcodec.cpp
   cochlea.cpp
   )
-set_target_properties(shared-lib
+set_target_properties(ssp-shared
   PROPERTIES OUTPUT_NAME "ssp"
   PUBLIC_HEADER "ssp.h"
   )
-target_link_libraries(shared-lib ${TARGET_LIBS})
-list(APPEND LIBSSP_TARGETS shared-lib)
+target_link_libraries(ssp-shared ${TARGET_LIBS})
+list(APPEND LIBSSP_TARGETS ssp-shared)
 
 # HTK file module
 add_library(htk-lib MODULE htkfile.cpp)
