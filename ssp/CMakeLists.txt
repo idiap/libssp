@@ -7,6 +7,11 @@
 #   Phil Garner, December 2013
 #
 
+set(HEADERS
+  ssp.h
+  cochlea.h
+  )
+
 add_library(ssp-shared SHARED
   ssp.cpp
   ar.cpp
@@ -16,7 +21,7 @@ add_library(ssp-shared SHARED
   )
 set_target_properties(ssp-shared
   PROPERTIES OUTPUT_NAME "ssp"
-  PUBLIC_HEADER "ssp.h"
+  PUBLIC_HEADER "${HEADERS}"
   )
 target_link_libraries(ssp-shared ${TARGET_LIBS})
 list(APPEND LIBSSP_TARGETS ssp-shared)
@@ -35,7 +40,7 @@ install(
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
-  PUBLIC_HEADER DESTINATION include
+  PUBLIC_HEADER DESTINATION include/ssp
   )
 
 # Slightly different location for the modules

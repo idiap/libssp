@@ -1,12 +1,11 @@
-A is: 0.981748
-Centre 0: 100, erb: 35.4939
-Centre 1: 159.683, erb: 41.936
-Centre 2: 254.19, erb: 52.137
-Centre 3: 403.839, erb: 68.29
-Centre 4: 640.806, erb: 93.8679
-Centre 5: 1016.04, erb: 134.37
-Centre 6: 1610.21, erb: 198.504
-Centre 7: 2551.07, erb: 300.059
-Centre 8: 4040.89, erb: 460.87
-Centre 9: 6400, erb: 715.509
+Centre 0: 146.698, erb: 40.5344
+Centre 1: 214.714, erb: 47.876
+Centre 2: 313.782, erb: 58.5693
+Centre 3: 458.076, erb: 74.1443
+Centre 4: 668.246, erb: 96.8298
+Centre 5: 974.365, erb: 129.872
+Centre 6: 1420.23, erb: 177.999
+Centre 7: 2069.66, erb: 248.097
+Centre 8: 3015.56, erb: 350.196
+Centre 9: 4393.29, erb: 498.908
 Norm: {10, 1025}

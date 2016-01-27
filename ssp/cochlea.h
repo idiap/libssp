@@ -27,9 +27,12 @@ namespace ssp
     {
     public:
         virtual void set(float iHz, float iBW, float iPeriod) = 0;
+        virtual void reset() = 0;
         virtual float operator ()(float iSample) = 0;
+        float centre() { return mCentre; };
     protected:
         float bwScale(int iOrder);
+        float mCentre;
     };
 
     /**
@@ -44,6 +47,8 @@ namespace ssp
         );
         ~Cochlea();
         float* operator ()(float iSample, float* oFilter);
+        void reset();
+        void dump();
     private:
         int mNFilters;
         int mType;
@@ -64,10 +69,10 @@ namespace ssp
     public:
         Holdsworth();
         void set(float iHz, float iBW, float iPeriod);
+        void reset();
         float operator ()(float iSample);
     private:
         static const int cOrder = 4;
-        float mCentre;
         float mCoeff;
         lube::cfloat mShift;
         lube::cfloat mState[cOrder+1];
@@ -84,10 +89,10 @@ namespace ssp
     public:
         Lyon();
         void set(float iHz, float iBW, float iPeriod);
+        void reset();
         float operator ()(float iSample);
     private:
         static const int cOrder = 2;
-        float mCentre;
         float mCoeff[3];
         float mState[2][cOrder+1];
     };

@@ -28,6 +28,7 @@ int main(int argc, char** argv)
 
     // Stick noise through a cochlea
     Cochlea c(100, rate/2*0.8f, nFilters, period, BPF_HOLDSWORTH);
+    c.dump();
     lube::DFT dft(nSamples, 0.0f);
 #if 0
     // Use noise; a window will be necessary
