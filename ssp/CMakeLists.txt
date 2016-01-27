@@ -10,6 +10,7 @@
 set(HEADERS
   ssp.h
   cochlea.h
+  warp.h
   )
 
 add_library(ssp-shared SHARED

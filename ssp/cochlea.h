@@ -53,10 +53,6 @@ namespace ssp
         int mNFilters;
         int mType;
         CochlearBPF* mFilter;
-        float hzToERB(float iHz);
-        float erbToHz(float iERB);
-        float hzToERBRate(float iHz);
-        float erbRateToHz(float iRate);
         void filter(int iCentre, float iSample, float* oFilter);
     };
 

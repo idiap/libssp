@@ -10,8 +10,10 @@
 #include <cmath>
 #include <cassert>
 #include <iostream>
+
 #include "ssp.h"
 #include "cochlea.h"
+#include "warp.h"
 
 using namespace std;
 using namespace ssp;
@@ -40,13 +42,14 @@ Cochlea::Cochlea(
     // Calculate the centre frequencies equally spaced on ERB rate scale.
     // minHz and maxHz correspond to the range extremes.  We ignore the centres
     // at those frequencies as would a mel filterbank implemented on a DFT.
-    float minRate = hzToERBRate(iMinHz);
-    float maxRate = hzToERBRate(iMaxHz);
+    const bool mel = 0;
+    float minRate = mel ? hzToMel(iMinHz) : hzToERBRate(iMinHz);
+    float maxRate = mel ? hzToMel(iMaxHz) : hzToERBRate(iMaxHz);
     float step = (maxRate-minRate)/(mNFilters+1);  // +1 = mNFilters+2 filters
     for (int i=0; i<mNFilters; i++)
     {
         float rate = minRate + step*(i+1);
-        float hz = erbRateToHz(rate);
+        float hz = mel ? melToHz(rate) : erbRateToHz(rate);
         float erb = hzToERB(hz);
         switch (mType)
         {
@@ -67,30 +70,6 @@ Cochlea::~Cochlea()
     if (mFilter)
         delete [] mFilter;
     mFilter = 0;
-}
-
-float Cochlea::hzToERB(float iHz)
-{
-    float erb = 24.7f * (4.37e-3*iHz + 1.0f);
-    return erb;
-}
-
-float Cochlea::erbToHz(float iERB)
-{
-    float hz = (iERB/24.7f-1.0f) / 4.37e-3;
-    return hz;
-}
-
-float Cochlea::hzToERBRate(float iHz)
-{
-    float rate = (1000.0f/107.94f)*std::log(437.0e-3f*iHz+1);
-    return rate;
-}
-
-float Cochlea::erbRateToHz(float iRate)
-{
-    float hz = (std::exp(107.94e-3*iRate) - 1.0f) / 437e-3f;
-    return hz;
 }
 
 float* Cochlea::operator ()(float iSample, float* oFilter)
