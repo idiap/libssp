@@ -27,7 +27,7 @@ int main(int argc, char** argv)
     int nSamples = 2048;
 
     // Stick noise through a cochlea
-    Cochlea c(100, rate/2*0.8f, nFilters, period, BPF_HOLDSWORTH);
+    Cochlea c(100, rate/2, nFilters, period, BPF_HOLDSWORTH);
     c.dump();
     lube::DFT dft(nSamples, 0.0f);
 #if 0
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
     gnu.push("set yrange [-100:]");
 #if 1
     gnu.push("set logscale x");
-    gnu.push("set xrange [30:8000]");
+    gnu.push("set xrange [100:8000]");
 #endif
     gnu.push("set style data lines");
     varstream vs;

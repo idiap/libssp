@@ -26,13 +26,13 @@ namespace ssp
 
     float hzToERBRate(float iHz)
     {
-        float rate = (1000.0f/107.94f)*std::log(437.0e-3f*iHz+1);
+        float rate = 21.4f * std::log10(4.37e-3f * iHz + 1);
         return rate;
     }
 
     float erbRateToHz(float iRate)
     {
-        float hz = (std::exp(107.94e-3*iRate) - 1.0f) / 437e-3f;
+        float hz = (std::pow(10, iRate / 21.4f) - 1.0f) / 4.37e-3f;
         return hz;
     }
 
@@ -45,7 +45,7 @@ namespace ssp
     /** Convert a value from the mel scale to Hz. */
     float melToHz(float iMel)
     {
-        return 700.0 * (std::pow(10, iMel / 2595.0f) - 1.0f);
+        return 700.0f * (std::pow(10, iMel / 2595.0f) - 1.0f);
     }
 }
 
