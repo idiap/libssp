@@ -212,9 +212,8 @@ void Lyon::set(float iHz, float iBW, float iPeriod)
 {
     mCentre = iHz;
     float e = std::exp(-2.0f*PI*iBW/bwScale(cOrder)*iPeriod);
-    float s = std::sin(2.0f*PI*iHz*iPeriod);
     float c = std::cos(2.0f*PI*iHz*iPeriod);
-    mCoeff[0] = e*s;
+    mCoeff[0] = 1.0f - e*c*2 + e*e;
     mCoeff[1] = e*c*2;
     mCoeff[2] = -e*e;
     reset();
@@ -246,6 +245,6 @@ float Lyon::operator ()(float iSample)
     mState[1][cOrder] = mState[0][cOrder];
     mState[0][cOrder] = z;
 
-    // Return the real result
+    // Return the result
     return w;
 }
