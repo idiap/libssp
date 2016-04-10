@@ -165,7 +165,8 @@ void Holdsworth::set(float iHz, float iBW, float iPeriod)
 {
     mCentre = iHz;
     mCoeff = 1.0f - std::exp(-2.0f*PI*iBW/bwScale(cOrder)*iPeriod);
-    mShift = std::exp(cfloat(0.0f, 2.0f*PI*iHz*iPeriod));
+    mDDelta = std::exp(cfloat(0.0f, -2.0f*PI*iHz*iPeriod));
+    mUDelta = std::exp(cfloat(0.0f,  2.0f*PI*iHz*iPeriod));
     mDShift = 1.0f;
     mUShift = 1.0f;
     reset();
@@ -196,8 +197,8 @@ float Holdsworth::operator ()(float iSample)
     float ret = (mUShift * w).real();
 
     // Update the frequency shifts
-    mDShift *= -mShift;
-    mUShift *=  mShift;
+    mDShift *= mDDelta;
+    mUShift *= mUDelta;
 
     // Return the real result
     return ret;

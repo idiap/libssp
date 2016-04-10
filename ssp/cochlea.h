@@ -70,7 +70,8 @@ namespace ssp
     private:
         static const int cOrder = 4;
         float mCoeff;
-        lube::cfloat mShift;
+        lube::cfloat mDDelta;
+        lube::cfloat mUDelta;
         lube::cfloat mState[cOrder+1];
         lube::cfloat mDShift;
         lube::cfloat mUShift;
