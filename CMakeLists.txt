@@ -16,8 +16,10 @@ set(CMAKE_CXX_FLAGS "-Wall -Werror -std=c++11")
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-find_package(LibUBE REQUIRED)
-include_directories(${LIBUBE_INCLUDE_DIR})
+if (NOT LIBUBE_FOUND)
+  find_package(LibUBE REQUIRED)
+endif (NOT LIBUBE_FOUND)
+include_directories(${LIBUBE_INCLUDE_DIRS})
 set(TARGET_LIBS ${LIBUBE_LIBRARIES})
 
 add_subdirectory(ssp)
