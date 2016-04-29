@@ -27,11 +27,10 @@ int main(int argc, char** argv)
     int nSamples = 2048;
 
     // Stick noise through a cochlea
-    Cochlea c(100, rate/2, nFilters, period,
-              //BPF_HOLDSWORTH
-              //BPF_LYON
-              BPF_CASCADE
-    );
+    //Holdsworth
+    //Lyon
+    Cascade
+        c(100, rate/2, nFilters, period);
     c.dump();
     lube::DFT dft(nSamples, 0.0f);
 #if 0

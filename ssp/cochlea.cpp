@@ -19,134 +19,35 @@ using namespace std;
 using namespace ssp;
 using namespace lube;
 
-Cochlea::Cochlea(
-    float iMinHz, float iMaxHz, int iNFilters, float iPeriod, int iType
-)
-{
-    // Allocate the filters
-    mNFilters = iNFilters;
-    mType = iType;
-    switch (mType)
-    {
-    case BPF_HOLDSWORTH:
-        mFilter.holdsworth = new Holdsworth[mNFilters];
-        break;
-    case BPF_LYON:
-        mFilter.lyon = new Lyon[mNFilters];
-        break;
-    case BPF_CASCADE:
-        mFilter.cascade = new Cascade[mNFilters];
-        break;
-    default:
-        assert(0);
-    }
 
+Cochlea::Cochlea()
+{
+    mNFilters = 0;
+}
+
+
+void Cochlea::set(float iMinHz, float iMaxHz, int iNFilters, float iPeriod)
+{
     // Calculate the centre frequencies equally spaced on ERB rate scale.
     // minHz and maxHz correspond to the range extremes.  We ignore the centres
     // at those frequencies as would a mel filterbank implemented on a DFT.
+    mNFilters = iNFilters;
     const bool mel = 0;
     float minRate = mel ? hzToMel(iMinHz) : hzToERBRate(iMinHz);
     float maxRate = mel ? hzToMel(iMaxHz) : hzToERBRate(iMaxHz);
     float step = (maxRate-minRate)/(mNFilters+1);  // +1 = mNFilters+2 filters
-    for (int i=0; i<mNFilters; i++)
+
+    // Go backwards so the cascades work
+    for (int i=mNFilters-1; i>=0; --i)
     {
         float rate = minRate + step*(i+1);
         float hz = mel ? melToHz(rate) : erbRateToHz(rate);
         float erb = hzToERB(hz);
-        switch (mType)
-        {
-        case BPF_HOLDSWORTH:
-            mFilter.holdsworth[i].set(hz, erb, iPeriod);
-            break;
-        case BPF_LYON:
-            mFilter.lyon[i].set(hz, erb, iPeriod);
-            break;
-        case BPF_CASCADE:
-            mFilter.cascade[i].set(hz, erb, iPeriod);
-            break;
-        default:
-            assert(0);
-        }
+        set(i, hz, erb, iPeriod);
     }
-}
 
-Cochlea::~Cochlea()
-{
-    // Any type will do
-    // ...no, it won't
-    if (mFilter.cascade)
-        delete [] mFilter.cascade;
-    mFilter.lyon = 0;
-}
-
-float* Cochlea::operator ()(float iSample, float* oFilter)
-{
-    // Call the filter for each bank; could be parallel.
-    switch (mType)
-    {
-    case BPF_HOLDSWORTH:
-        for (int f=0; f<mNFilters; f++)
-            oFilter[f] = mFilter.holdsworth[f](iSample);
-        break;
-    case BPF_LYON:
-        for (int f=0; f<mNFilters; f++)
-            oFilter[f] = mFilter.lyon[f](iSample);
-        break;
-    case BPF_CASCADE:
-        oFilter[mNFilters-1] = mFilter.cascade[mNFilters-1](iSample);
-        for (int f=mNFilters-2; f>=0; --f)
-            oFilter[f] = mFilter.cascade[f](oFilter[f+1]);
-        break;
-    default:
-        assert(0);
-    }
-    return oFilter;
-}
-
-
-void Cochlea::reset()
-{
-    switch (mType)
-    {
-    case BPF_HOLDSWORTH:
-        for (int f=0; f<mNFilters; f++)
-            mFilter.holdsworth[f].reset();
-        break;
-    case BPF_LYON:
-        for (int f=0; f<mNFilters; f++)
-            mFilter.lyon[f].reset();
-        break;
-    case BPF_CASCADE:
-        for (int f=0; f<mNFilters; f++)
-            mFilter.cascade[f].reset();
-        break;
-    default:
-        assert(0);
-    }
-}
-
-void Cochlea::dump()
-{
-    for (int i=0; i<mNFilters; i++)
-    {
-        cout << "Centre " << i << ": ";
-        float c;
-        switch (mType)
-        {
-        case BPF_HOLDSWORTH:
-            c = mFilter.holdsworth[i].centre();
-            break;
-        case BPF_LYON:
-            c = mFilter.lyon[i].centre();
-            break;
-        case BPF_CASCADE:
-            c = mFilter.cascade[i].centre();
-            break;
-        default:
-            assert(0);
-        }
-        cout << c << ", erb: " << hzToERB(c) << endl;
-    }
+    // Zero all the states
+    reset();
 }
 
 // You'd think there'd be a library function for this
@@ -158,7 +59,7 @@ static int factorial(int iN)
     return ret;
 }
 
-float CochlearBPF::bwScale(int iOrder)
+float Cochlea::bwScale(int iOrder)
 {
     // This will break if two types of filter use it for different orders in
     // the same instance
@@ -177,107 +78,196 @@ float CochlearBPF::bwScale(int iOrder)
 
 Holdsworth::Holdsworth()
 {
-    set(0.0f, 0.0f, 0.0f);
+    mFilter = 0;
 }
 
-void Holdsworth::set(float iHz, float iBW, float iPeriod)
+Holdsworth::Holdsworth(float iMinHz, float iMaxHz, int iNFilters, float iPeriod)
 {
-    mCentre = iHz;
-    mCoeff = 1.0f - std::exp(-2.0f*PI*iBW/bwScale(cOrder)*iPeriod);
-    mDDelta = std::exp(cfloat(0.0f, -2.0f*PI*iHz*iPeriod));
-    mUDelta = std::exp(cfloat(0.0f,  2.0f*PI*iHz*iPeriod));
-    mDShift = 1.0f;
-    mUShift = 1.0f;
-    reset();
+    mFilter = new filter[iNFilters];
+    Cochlea::set(iMinHz, iMaxHz, iNFilters, iPeriod);
+}
+
+Holdsworth::~Holdsworth()
+{
+    if (mFilter)
+        delete [] mFilter;
+    mFilter = 0;
+}
+
+void Holdsworth::set(float iMinHz, float iMaxHz, int iNFilters, float iPeriod)
+{
+    if (mFilter)
+        delete [] mFilter;
+    mFilter = new filter[iNFilters];
+    Cochlea::set(iMinHz, iMaxHz, iNFilters, iPeriod);
+}
+
+void Holdsworth::set(int iFilter, float iHz, float iBW, float iPeriod)
+{
+    filter& f = mFilter[iFilter];
+    f.centre = iHz;
+    f.coeff = 1.0f - std::exp(-2.0f*PI*iBW/bwScale(cOrder)*iPeriod);
+    f.dDelta = std::exp(cfloat(0.0f, -2.0f*PI*iHz*iPeriod));
+    f.uDelta = std::exp(cfloat(0.0f,  2.0f*PI*iHz*iPeriod));
+    f.dShift = 1.0f;
+    f.uShift = 1.0f;
 }
 
 void Holdsworth::reset()
 {
-    for (int j=0; j<cOrder+1; j++)
-        mState[j] = 0.0f;
+    for (int i=0; i<mNFilters; i++)
+        for (int j=0; j<cOrder+1; j++)
+            mFilter[i].state[j] = 0.0f;
 }
 
-float Holdsworth::operator ()(float iSample)
+void Holdsworth::dump()
 {
-    // Shift the sample down to DC
-    cfloat z = mDShift * iSample;
-
-    // Filter
-    cfloat w;
-    for (int i=1; i<cOrder+1; i++)
+    for (int i=0; i<mNFilters; i++)
     {
-        w = mState[i] + mCoeff * (mState[i-1] - mState[i]);
-        mState[i-1] = z;
-        z = w;
+        float c = mFilter[i].centre;
+        cout << "Centre " << i << ": " << c
+             << ", erb: " << hzToERB(c) << endl;
     }
-    mState[cOrder] = z;
+}
 
-    // Shift back up to center frequency
-    float ret = (mUShift * w).real();
+void Holdsworth::operator ()(float iSample, float* oFilter)
+{
+    for (int i=0; i<mNFilters; i++)
+    {
+        filter& f = mFilter[i];
 
-    // Update the frequency shifts
-    mDShift *= mDDelta;
-    mUShift *= mUDelta;
+        // Shift the sample down to DC
+        cfloat z = f.dShift * iSample;
 
-    // Return the real result
-    return ret;
+        // Filter
+        cfloat w;
+        for (int j=1; j<cOrder+1; j++)
+        {
+            w = f.state[j] + f.coeff * (f.state[j-1] - f.state[j]);
+            f.state[j-1] = z;
+            z = w;
+        }
+        f.state[cOrder] = z;
+
+        // Shift back up to center frequency
+        oFilter[i] = (f.uShift * w).real();
+
+        // Update the frequency shifts
+        f.dShift *= f.dDelta;
+        f.uShift *= f.uDelta;
+    }
 }
 
 Lyon::Lyon()
 {
-    set(0.0f, 0.0f, 0.0f);
+    mFilter = 0;
 }
 
-void Lyon::set(float iHz, float iBW, float iPeriod)
+Lyon::Lyon(float iMinHz, float iMaxHz, int iNFilters, float iPeriod)
 {
-    mCentre = iHz;
-    float e = std::exp(-2.0f*PI*iBW/bwScale(cOrder)*iPeriod);
-    float c = std::cos(2.0f*PI*iHz*iPeriod);
-    mCoeff[0] = 1.0f - e*c*2 + e*e;
-    mCoeff[1] = e*c*2;
-    mCoeff[2] = -e*e;
-    reset();
+    mFilter = new filter[iNFilters];
+    Cochlea::set(iMinHz, iMaxHz, iNFilters, iPeriod);
+}
+
+Lyon::~Lyon()
+{
+    if (mFilter)
+        delete [] mFilter;
+    mFilter = 0;
+}
+
+void Lyon::set(float iMinHz, float iMaxHz, int iNFilters, float iPeriod)
+{
+    if (mFilter)
+        delete [] mFilter;
+    mFilter = new filter[iNFilters];
+    Cochlea::set(iMinHz, iMaxHz, iNFilters, iPeriod);
+}
+
+void Lyon::set(int iFilter, float iHz, float iBW, float iPeriod)
+{
+    filter& f = mFilter[iFilter];
+    f.centre = iHz;
+    float E = std::exp(-2.0f*PI*iBW/bwScale(cOrder)*iPeriod);
+    float C = std::cos( 2.0f*PI*iHz*iPeriod);
+    f.coeff[0] = 1.0f - E*C*2 + E*E;
+    f.coeff[1] = E*C*2;
+    f.coeff[2] = -E*E;
 }
 
 void Lyon::reset()
 {
-    for (int j=0; j<cOrder+1; j++)
+    for (int i=0; i<mNFilters; i++)
+        for (int j=0; j<cOrder+1; j++)
+        {
+            mFilter[i].state[0][j] = 0.0f;
+            mFilter[i].state[1][j] = 0.0f;
+        }
+}
+
+void Lyon::dump()
+{
+    for (int i=0; i<mNFilters; i++)
     {
-        mState[0][j] = 0.0f;
-        mState[1][j] = 0.0f;
+        float c = mFilter[i].centre;
+        cout << "Centre " << i << ": " << c
+             << ", erb: " << hzToERB(c) << endl;
     }
 }
 
-float Lyon::operator ()(float iSample)
+void Lyon::operator ()(float iSample, float* oFilter)
 {
-    // Filter
-    float z = iSample;
-    float w;
-    for (int i=1; i<cOrder+1; i++)
+    for (int i=0; i<mNFilters; i++)
     {
-        w = mCoeff[0] * mState[0][i-1] +
-            mCoeff[1] * mState[0][i] +
-            mCoeff[2] * mState[1][i];
-        mState[1][i-1] = mState[0][i-1];
-        mState[0][i-1] = z;
-        z = w;
+        float z = iSample;
+        float w;
+        filter& f = mFilter[i];
+        for (int i=1; i<cOrder+1; i++)
+        {
+            w = f.coeff[0] * f.state[0][i-1] +
+                f.coeff[1] * f.state[0][i] +
+                f.coeff[2] * f.state[1][i];
+            f.state[1][i-1] = f.state[0][i-1];
+            f.state[0][i-1] = z;
+            z = w;
+        }
+        f.state[1][cOrder] = f.state[0][cOrder];
+        f.state[0][cOrder] = z;
+        oFilter[i] = w;
     }
-    mState[1][cOrder] = mState[0][cOrder];
-    mState[0][cOrder] = z;
-
-    // Return the result
-    return w;
 }
 
 
 Cascade::Cascade()
 {
-    set(0.0f, 0.0f, 0.0f);
+    mFilter = 0;
 }
 
-void Cascade::set(float iHz, float iBW, float iPeriod)
+Cascade::Cascade(float iMinHz, float iMaxHz, int iNFilters, float iPeriod)
 {
-    mCentre = iHz;
+    mFilter = new filter[iNFilters];
+    Cochlea::set(iMinHz, iMaxHz, iNFilters, iPeriod);
+}
+
+Cascade::~Cascade()
+{
+    if (mFilter)
+        delete [] mFilter;
+    mFilter = 0;
+}
+
+void Cascade::set(float iMinHz, float iMaxHz, int iNFilters, float iPeriod)
+{
+    if (mFilter)
+        delete [] mFilter;
+    mFilter = new filter[iNFilters];
+    Cochlea::set(iMinHz, iMaxHz, iNFilters, iPeriod);
+}
+
+void Cascade::set(int iFilter, float iHz, float iBW, float iPeriod)
+{
+    filter& f = mFilter[iFilter];
+    f.centre = iHz;
     float Ep = std::exp(-2.0f*PI*iBW/bwScale(1)*iPeriod);
     float Cp = std::cos(2.0f*PI*iHz*iPeriod);
     float Ez = std::exp(-2.0f*PI*iBW/bwScale(1)*2.0*iPeriod);
@@ -292,21 +282,30 @@ void Cascade::set(float iHz, float iBW, float iPeriod)
     denom[0] =  1.0f;
     denom[1] = -Ep*Cp*2;
     denom[2] =  Ep*Ep;
-    mFilter.set(3, numer, 3, denom);
-    reset();
+    f.filter.set(3, numer, 3, denom);
 }
 
 void Cascade::reset()
 {
-    for (int j=0; j<3; j++)
-        mState[j] = 0.0f;
+    for (int i=0; i<mNFilters; i++)
+        for (int j=0; j<3; j++)
+            mFilter[i].state[j] = 0.0f;
 }
 
-float Cascade::operator ()(float iSample)
+void Cascade::dump()
 {
-    // Filter
-    float w = mFilter(iSample, mState);
+    for (int i=0; i<mNFilters; i++)
+    {
+        float c = mFilter[i].centre;
+        cout << "Centre " << i << ": " << c
+             << ", erb: " << hzToERB(c) << endl;
+    }
+}
 
-    // Return the result
-    return w;
+void Cascade::operator ()(float iSample, float* oFilter)
+{
+    oFilter[mNFilters-1] =
+        mFilter[mNFilters-1].filter(iSample, mFilter[mNFilters-1].state);
+    for (int i=mNFilters-2; i>=0; --i)
+        oFilter[i] = mFilter[i].filter(oFilter[i+1], mFilter[i].state);
 }

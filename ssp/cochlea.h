@@ -15,107 +15,103 @@
 
 namespace ssp
 {
-    /** Type of bandpass filter */
-    enum {
-        BPF_HOLDSWORTH,
-        BPF_LYON,
-        BPF_CASCADE
-    };
-
-    /**
-     * Interface to a bandpass filter implementation of a cochlear filter.
-     */
-    class CochlearBPF
-    {
-    public:
-        virtual void set(float iHz, float iBW, float iPeriod) = 0;
-        virtual void reset() = 0;
-        virtual float operator ()(float iSample) = 0;
-        float centre() { return mCentre; };
-    protected:
-        float bwScale(int iOrder);
-        float mCentre;
-    };
-
-    /**
-     * One instance of the bandpass filter described by Holdsworth et al. being
-     * a component of a gammatone filter bank.
-     */
-    class Holdsworth : public CochlearBPF
-    {
-    public:
-        Holdsworth();
-        void set(float iHz, float iBW, float iPeriod);
-        void reset();
-        float operator ()(float iSample);
-    private:
-        static const int cOrder = 4;
-        float mCoeff;
-        lube::cfloat mDDelta;
-        lube::cfloat mUDelta;
-        lube::cfloat mState[cOrder+1];
-        lube::cfloat mDShift;
-        lube::cfloat mUShift;
-    };
-
-    /**
-     * One instance of the filter described by Lyon, being a component of an
-     * all-pole (non-)gamma-tone filterbank.
-     */
-    class Lyon : public CochlearBPF
-    {
-    public:
-        Lyon();
-        void set(float iHz, float iBW, float iPeriod);
-        void reset();
-        float operator ()(float iSample);
-    private:
-        static const int cOrder = 2;
-        float mCoeff[3];
-        float mState[2][cOrder+1];
-    };
-
-    /**
-     * One instance of the cascade filter described by Lyon, being a component
-     * of a two-pole two-zero filterbank.
-     */
-    class Cascade : public CochlearBPF
-    {
-    public:
-        Cascade();
-        void set(float iHz, float iBW, float iPeriod);
-        void reset();
-        float operator ()(float iSample);
-    private:
-        core::Filter mFilter;
-        float mState[3];
-    };
-
     /**
      * Model of a human cochlea; in particular the concept of a filterbank.
      */
     class Cochlea
     {
     public:
-        Cochlea(
-            float iMinHz, float iMaxHz, int iNFilters, float iPeriod,
-            int iType = BPF_HOLDSWORTH
-        );
-        ~Cochlea();
-        float* operator ()(float iSample, float* oFilter);
+        Cochlea();
+        virtual ~Cochlea() {};
+        void set(float iMinHz, float iMaxHz, int iNFilters, float iPeriod);
+        virtual void operator ()(float iSample, float* oFilter) = 0;
+        virtual void reset() = 0;
+        virtual void dump() = 0;
+    protected:
+        virtual void set(int iFilter, float iHz, float iBW, float iPeriod) = 0;
+        float bwScale(int iOrder);
+        int mNFilters;
+    };
+
+    /**
+     * The gammatone filterbank described by Holdsworth et al.
+     */
+    class Holdsworth : public Cochlea
+    {
+    public:
+        Holdsworth();
+        Holdsworth(float iMinHz, float iMaxHz, int iNFilters, float iPeriod);
+        ~Holdsworth();
+        void set(float iMinHz, float iMaxHz, int iNFilters, float iPeriod);
         void reset();
         void dump();
+        void operator ()(float iSample, float* oFilter);
+    protected:
+        void set(int iFilter, float iHz, float iBW, float iPeriod);
     private:
-        int mNFilters;
-        int mType;
-        union {
-            // Polymorphism ought to work here, but it leads to lots of
-            // dynamic_casts because it's an array.
-            Holdsworth* holdsworth;
-            Lyon* lyon;
-            Cascade* cascade;
-        } mFilter;
-        void filter(int iCentre, float iSample, float* oFilter);
+        static const int cOrder = 4;
+        struct filter
+        {
+            float centre;
+            float coeff;
+            lube::cfloat dDelta;
+            lube::cfloat uDelta;
+            lube::cfloat state[cOrder+1];
+            lube::cfloat dShift;
+            lube::cfloat uShift;
+        };
+        filter* mFilter;
+    };
+
+    /**
+     * The all-pole (non-)gamma-tone filterbank of Lyon.
+     */
+    class Lyon : public Cochlea
+    {
+    public:
+        Lyon();
+        ~Lyon();
+        Lyon(float iMinHz, float iMaxHz, int iNFilters, float iPeriod);
+        void set(float iMinHz, float iMaxHz, int iNFilters, float iPeriod);
+        void reset();
+        void dump();
+        void operator ()(float iSample, float* oFilter);
+    protected:
+        void set(int iFilter, float iHz, float iBW, float iPeriod);
+    private:
+        static const int cOrder = 2;
+        struct filter
+        {
+            float centre;
+            float coeff[3];
+            float state[2][cOrder+1];
+        };
+        filter* mFilter;
+    };
+
+    /**
+     * Lyon's two-pole two-zero cascade filterbank.
+     */
+    class Cascade : public Cochlea
+    {
+    public:
+        Cascade();
+        ~Cascade();
+        Cascade(float iMinHz, float iMaxHz, int iNFilters, float iPeriod);
+        void set(float iMinHz, float iMaxHz, int iNFilters, float iPeriod);
+        void reset();
+        void dump();
+        void operator ()(float iSample, float* oFilter);
+    protected:
+        void set(int iFilter, float iHz, float iBW, float iPeriod);
+    private:
+        struct filter
+        {
+            float centre;
+            core::Filter filter;
+            float state[3];
+        };
+        filter* mFilter;
     };
 }
 
