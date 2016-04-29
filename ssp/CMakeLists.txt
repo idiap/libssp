@@ -11,6 +11,7 @@ set(HEADERS
   ssp.h
   cochlea.h
   warp.h
+  filter.h
   )
 
 add_library(ssp-shared SHARED
@@ -19,6 +20,7 @@ add_library(ssp-shared SHARED
   pitch.cpp
   arcodec.cpp
   cochlea.cpp
+  filter.cpp
   )
 set_target_properties(ssp-shared
   PROPERTIES OUTPUT_NAME "ssp"

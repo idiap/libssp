@@ -11,13 +11,15 @@
 #define COCHLEA_H
 
 #include <lube.h>
+#include "filter.h"
 
 namespace ssp
 {
     /** Type of bandpass filter */
     enum {
         BPF_HOLDSWORTH,
-        BPF_LYON
+        BPF_LYON,
+        BPF_CASCADE
     };
 
     /**
@@ -33,27 +35,6 @@ namespace ssp
     protected:
         float bwScale(int iOrder);
         float mCentre;
-    };
-
-    /**
-     * Model of a human cochlea; in particular the concept of a filterbank.
-     */
-    class Cochlea
-    {
-    public:
-        Cochlea(
-            float iMinHz, float iMaxHz, int iNFilters, float iPeriod,
-            int iType = BPF_HOLDSWORTH
-        );
-        ~Cochlea();
-        float* operator ()(float iSample, float* oFilter);
-        void reset();
-        void dump();
-    private:
-        int mNFilters;
-        int mType;
-        CochlearBPF* mFilter;
-        void filter(int iCentre, float iSample, float* oFilter);
     };
 
     /**
@@ -92,6 +73,49 @@ namespace ssp
         static const int cOrder = 2;
         float mCoeff[3];
         float mState[2][cOrder+1];
+    };
+
+    /**
+     * One instance of the cascade filter described by Lyon, being a component
+     * of a two-pole two-zero filterbank.
+     */
+    class Cascade : public CochlearBPF
+    {
+    public:
+        Cascade();
+        void set(float iHz, float iBW, float iPeriod);
+        void reset();
+        float operator ()(float iSample);
+    private:
+        core::Filter mFilter;
+        float mState[3];
+    };
+
+    /**
+     * Model of a human cochlea; in particular the concept of a filterbank.
+     */
+    class Cochlea
+    {
+    public:
+        Cochlea(
+            float iMinHz, float iMaxHz, int iNFilters, float iPeriod,
+            int iType = BPF_HOLDSWORTH
+        );
+        ~Cochlea();
+        float* operator ()(float iSample, float* oFilter);
+        void reset();
+        void dump();
+    private:
+        int mNFilters;
+        int mType;
+        union {
+            // Polymorphism ought to work here, but it leads to lots of
+            // dynamic_casts because it's an array.
+            Holdsworth* holdsworth;
+            Lyon* lyon;
+            Cascade* cascade;
+        } mFilter;
+        void filter(int iCentre, float iSample, float* oFilter);
     };
 }
 

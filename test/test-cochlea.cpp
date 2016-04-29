@@ -29,7 +29,8 @@ int main(int argc, char** argv)
     // Stick noise through a cochlea
     Cochlea c(100, rate/2, nFilters, period,
               //BPF_HOLDSWORTH
-              BPF_LYON
+              //BPF_LYON
+              BPF_CASCADE
     );
     c.dump();
     lube::DFT dft(nSamples, 0.0f);

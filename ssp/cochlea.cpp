@@ -19,7 +19,6 @@ using namespace std;
 using namespace ssp;
 using namespace lube;
 
-
 Cochlea::Cochlea(
     float iMinHz, float iMaxHz, int iNFilters, float iPeriod, int iType
 )
@@ -30,10 +29,13 @@ Cochlea::Cochlea(
     switch (mType)
     {
     case BPF_HOLDSWORTH:
-        mFilter = new Holdsworth[mNFilters];
+        mFilter.holdsworth = new Holdsworth[mNFilters];
         break;
     case BPF_LYON:
-        mFilter = new Lyon[mNFilters];
+        mFilter.lyon = new Lyon[mNFilters];
+        break;
+    case BPF_CASCADE:
+        mFilter.cascade = new Cascade[mNFilters];
         break;
     default:
         assert(0);
@@ -54,10 +56,13 @@ Cochlea::Cochlea(
         switch (mType)
         {
         case BPF_HOLDSWORTH:
-            dynamic_cast<Holdsworth*>(mFilter)[i].set(hz, erb, iPeriod);
+            mFilter.holdsworth[i].set(hz, erb, iPeriod);
             break;
         case BPF_LYON:
-            dynamic_cast<Lyon*>(mFilter)[i].set(hz, erb, iPeriod);
+            mFilter.lyon[i].set(hz, erb, iPeriod);
+            break;
+        case BPF_CASCADE:
+            mFilter.cascade[i].set(hz, erb, iPeriod);
             break;
         default:
             assert(0);
@@ -67,9 +72,11 @@ Cochlea::Cochlea(
 
 Cochlea::~Cochlea()
 {
-    if (mFilter)
-        delete [] mFilter;
-    mFilter = 0;
+    // Any type will do
+    // ...no, it won't
+    if (mFilter.cascade)
+        delete [] mFilter.cascade;
+    mFilter.lyon = 0;
 }
 
 float* Cochlea::operator ()(float iSample, float* oFilter)
@@ -79,11 +86,16 @@ float* Cochlea::operator ()(float iSample, float* oFilter)
     {
     case BPF_HOLDSWORTH:
         for (int f=0; f<mNFilters; f++)
-            oFilter[f] = dynamic_cast<Holdsworth*>(mFilter)[f](iSample);
+            oFilter[f] = mFilter.holdsworth[f](iSample);
         break;
     case BPF_LYON:
         for (int f=0; f<mNFilters; f++)
-            oFilter[f] = dynamic_cast<Lyon*>(mFilter)[f](iSample);
+            oFilter[f] = mFilter.lyon[f](iSample);
+        break;
+    case BPF_CASCADE:
+        oFilter[mNFilters-1] = mFilter.cascade[mNFilters-1](iSample);
+        for (int f=mNFilters-2; f>=0; --f)
+            oFilter[f] = mFilter.cascade[f](oFilter[f+1]);
         break;
     default:
         assert(0);
@@ -98,11 +110,15 @@ void Cochlea::reset()
     {
     case BPF_HOLDSWORTH:
         for (int f=0; f<mNFilters; f++)
-            dynamic_cast<Holdsworth*>(mFilter)[f].reset();
+            mFilter.holdsworth[f].reset();
         break;
     case BPF_LYON:
         for (int f=0; f<mNFilters; f++)
-            dynamic_cast<Lyon*>(mFilter)[f].reset();
+            mFilter.lyon[f].reset();
+        break;
+    case BPF_CASCADE:
+        for (int f=0; f<mNFilters; f++)
+            mFilter.cascade[f].reset();
         break;
     default:
         assert(0);
@@ -118,10 +134,13 @@ void Cochlea::dump()
         switch (mType)
         {
         case BPF_HOLDSWORTH:
-            c = dynamic_cast<Holdsworth*>(mFilter)[i].centre();
+            c = mFilter.holdsworth[i].centre();
             break;
         case BPF_LYON:
-            c = dynamic_cast<Lyon*>(mFilter)[i].centre();
+            c = mFilter.lyon[i].centre();
+            break;
+        case BPF_CASCADE:
+            c = mFilter.cascade[i].centre();
             break;
         default:
             assert(0);
@@ -245,6 +264,48 @@ float Lyon::operator ()(float iSample)
     }
     mState[1][cOrder] = mState[0][cOrder];
     mState[0][cOrder] = z;
+
+    // Return the result
+    return w;
+}
+
+
+Cascade::Cascade()
+{
+    set(0.0f, 0.0f, 0.0f);
+}
+
+void Cascade::set(float iHz, float iBW, float iPeriod)
+{
+    mCentre = iHz;
+    float Ep = std::exp(-2.0f*PI*iBW/bwScale(1)*iPeriod);
+    float Cp = std::cos(2.0f*PI*iHz*iPeriod);
+    float Ez = std::exp(-2.0f*PI*iBW/bwScale(1)*2.0*iPeriod);
+    float Cz = std::cos(2.0f*PI*iHz*iPeriod*1.5);
+    float numer[3];
+    float denom[3];
+    float A = ( (1.0f - Ep*Cp*2 + Ep*Ep) /
+                (1.0f - Ez*Cz*2 + Ez*Ez) );
+    numer[0] =  A;
+    numer[1] = -A*Ez*Cz*2;
+    numer[2] =  A*Ez*Ez;
+    denom[0] =  1.0f;
+    denom[1] = -Ep*Cp*2;
+    denom[2] =  Ep*Ep;
+    mFilter.set(3, numer, 3, denom);
+    reset();
+}
+
+void Cascade::reset()
+{
+    for (int j=0; j<3; j++)
+        mState[j] = 0.0f;
+}
+
+float Cascade::operator ()(float iSample)
+{
+    // Filter
+    float w = mFilter(iSample, mState);
 
     // Return the result
     return w;

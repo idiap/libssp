@@ -13,7 +13,7 @@
 
 #include <lube.h>
 #include <lube/config.h>
-
+#include "filter.h"
 
 namespace ssp
 {
@@ -137,8 +137,7 @@ namespace ssp
     protected:
         void vector(var iVar, var& oVar) const;
     private:
-        var mNumer;
-        var mDenom;
+        core::Filter mFilter;
     };
 
     var normal(int iSize, float iMean=0.0f, float iStdDev=1.0f);

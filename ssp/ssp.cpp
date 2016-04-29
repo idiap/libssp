@@ -312,28 +312,23 @@ void OverlapAdd::vector(var iVar, var& oVar) const
 }
 
 
+/**
+ * Filter class
+ *
+ * A direct form II filter that should be the same as the matlab / octave
+ * function "filter(b, a, x)".  The input denominator (array a) should begin
+ * with 1.0; this is discarded.  The numerator is stored in full.
+ */
 Filter::Filter(var iNumer, var iDenom)
+    : mFilter( iNumer.size(), iNumer.ptr<float>(),
+               iDenom.size(), iDenom.ptr<float>() )
 {
     mDim = 1;
-    mNumer = iNumer.copy();
-    for(int i=1; i<iDenom.size(); i++)
-        mDenom.push(iDenom[i]*-1);
 }
 
 void Filter::vector(var iVar, var& oVar) const
 {
-    // Direct form II filter
-    int ns = std::max(mNumer.size(), mDenom.size());
-    var state(ns, 0.0f);
-    for (int i=0; i<iVar.size(); i++)
-    {
-        var y = iVar(i);
-        if (mDenom)
-            y += lube::dot(state, mDenom);
-        state.pop();
-        state.unshift(y);
-        oVar(i) = mNumer ? lube::dot(state, mNumer) : y;
-    }
+    mFilter(iVar.size(), iVar.ptr<float>(), oVar.ptr<float>());
 }
 
 
