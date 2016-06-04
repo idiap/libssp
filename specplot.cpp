@@ -65,7 +65,8 @@ int main(int argc, char** argv)
     var gnu;
     gnu.push("plot \"-\" matrix with image");
     gnu.push(lube::log(p+1e-8));
-    file gnuf("gnuplot");
+    lube::filemodule gnum("gnuplot");
+    lube::file& gnuf = gnum.create();
     gnuf.write(lube::nil, gnu);
 
     return 0;

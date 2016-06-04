@@ -10,6 +10,7 @@
 #include <cassert>
 #include <fstream>
 #include <lube/var.h>
+#include <lube/module.h>
 
 namespace libube
 {
@@ -37,7 +38,7 @@ namespace libube
     /**
      * Class to handle HTK feature format files
      */
-    class HTK : public File
+    class HTK : public file
     {
     public:
         HTK(var iAttr);

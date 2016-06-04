@@ -43,7 +43,8 @@ int main(int argc, char** argv)
     gnu.push(plotstream.str());
     gnu.push("plot \"-\"");
     gnu.push(a);
-    file gnuf("gnuplot");
+    lube::filemodule gnum("gnuplot");
+    lube::file& gnuf = gnum.create();
     gnuf.write(lube::nil, gnu);
 
     // Done

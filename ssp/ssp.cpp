@@ -8,10 +8,11 @@
  */
 
 
-#include "ssp.h"
-
 #include <cmath>
 #include <random>
+
+#include <lube/module.h>
+#include "ssp.h"
 
 using namespace std;
 using namespace ssp;
@@ -35,8 +36,9 @@ PCM::PCM(lube::Config& iConfig, var iStr)
 var PCM::read(var iFileName)
 {
     var rate = mAttr["rate"].copy();
-    file vf("snd", mAttr);
-    var snd = vf.read(iFileName);
+    lube::filemodule sm("snd");
+    lube::file& sf = sm.create(mAttr);
+    var snd = sf.read(iFileName);
     if (rate && (rate != mAttr["rate"]))
         throw lube::error("read: file rate does not match pcm rate");
     return snd;
@@ -48,8 +50,9 @@ var PCM::read(var iFileName)
  */
 void PCM::write(var iFileName, var iVar)
 {
-    file vf("snd", mAttr);
-    vf.write(iFileName, iVar);
+    lube::filemodule sm("snd");
+    lube::file& sf = sm.create(mAttr);
+    sf.write(iFileName, iVar);
 }
 
 

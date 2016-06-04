@@ -7,6 +7,8 @@
  *   Phil Garner, May 2015
  */
 
+#include <lube/module.h>
+
 #include "arcodec.h"
 #include "ar.h"
 #include "pitch.h"
@@ -97,7 +99,8 @@ var ARCodec::decode(var iParams)
 var ARCodec::read(var iFile)
 {
     // Begin by reading the HTK file, which is LSPs and log(gg)
-    file htk("htk");
+    lube::filemodule htkm("htk");
+    lube::file& htk = htkm.create();
     var prmFile = iFile;
     var prm = htk.read(prmFile);
 
@@ -117,7 +120,8 @@ var ARCodec::read(var iFile)
     }
 
     // The log(f0) and hnr parts are text
-    file txt("txt");
+    lube::filemodule txtm("txt");
+    lube::file& txt = txtm.create();
     var lf0File = iFile.replace("\\....", ".lf0");
     var hnrFile = iFile.replace("\\....", ".hnr");
     var lf0 = txt.read(lf0File);
@@ -156,12 +160,14 @@ void ARCodec::write(var iFile, var iParams)
     }
 
     // Params are HTK format
-    file htk("htk");
+    lube::filemodule htkm("htk");
+    lube::file& htk = htkm.create();
     var prmFile = iFile;
     htk.write(prmFile, prm);
 
     // log(f0) and hnr files are text
-    file txt("txt");
+    lube::filemodule txtm("txt");
+    lube::file& txt = txtm.create();
     var lf0File = iFile.replace("\\....", ".lf0");
     var hnrFile = iFile.replace("\\....", ".hnr");
     txt.write(lf0File, lf0);

@@ -108,7 +108,8 @@ int main(int argc, char** argv)
         }
         gnu.push(data);
     }
-    file gnuf("gnuplot");
+    lube::filemodule gnum("gnuplot");
+    lube::file& gnuf = gnum.create();
     // gnuf.write(lube::nil, gnu); // For immediate display
     gnuf.write("test-cochlea.eps", gnu); // For file
 

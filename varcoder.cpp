@@ -31,7 +31,6 @@ int main(int argc, char** argv)
     lube::Option opt(argc, argv, "deoC:");
     while (opt)
     {
-        file ini("ini");
         switch (opt.get())
         {
         case 'd':
@@ -64,7 +63,6 @@ int main(int argc, char** argv)
     // AR codec
     PCM pcm(cnf);
     ARCodec arcodec(&pcm, oracle);
-    file htk("htk");
 
     if (!encode && !decode)
     {

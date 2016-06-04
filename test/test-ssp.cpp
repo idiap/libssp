@@ -129,7 +129,8 @@ ans =
     cout << "AR:  " << psl << endl;
 
     // HTK files
-    file htk("htk");
+    lube::filemodule htkm("htk");
+    lube::file& htk = htkm.create();
     htk.write("test.htk", fv);
     var fvl = htk.read("test.htk");
     cout << "Read file: " << fvl << endl;
