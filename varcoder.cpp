@@ -14,47 +14,27 @@
 using namespace std;
 using namespace ssp;
 
-void usage()
-{
-    cout << "varcoder" << endl;
-}
-
 int main(int argc, char** argv)
 {
-    // What to do
-    bool encode = false;
-    bool decode = false;
-    bool oracle = false;
-
     // Command line
+    lube::Option opt("varcoder: SSP based vocoder");
+    opt(" <args> should be the input and output files respectively");
+    opt('e', "Read a wave file and encode as parameters");
+    opt('d', "Read parameters and decode");
+    opt('o', "Use the oracle excitation in the AR codec");
+    opt('C', "Read configuration file", "/dev/null");
+    opt("Default behaviour is a best-effort encode-decode copy");
+    opt.parse(argc, argv);
+
+    // Configuration
     lube::Config cnf;
-    lube::Option opt(argc, argv, "deoC:");
-    while (opt)
-    {
-        switch (opt.get())
-        {
-        case 'd':
-            decode = true;
-            break;
-        case 'e':
-            encode = true;
-            break;
-        case 'o':
-            oracle = true;
-            break;
-        case 'C':
-            cnf.read(opt.arg());
-            break;
-        default:
-            usage();
-            exit(EXIT_FAILURE);
-        }
-    }
+    if (opt['C'] != "/dev/null")
+        cnf.read(opt['C']);
 
     // Register rest of the command line
-    var arg = opt;
-    if (argc < 3)
-        throw lube::error("Not enough args");
+    var arg = opt.args();
+    if (arg.size() < 2)
+        opt.usage(0);
 
     // The input and output should be the last two arguments
     var ofile = arg.pop();
@@ -62,9 +42,9 @@ int main(int argc, char** argv)
 
     // AR codec
     PCM pcm(cnf);
-    ARCodec arcodec(&pcm, oracle);
+    ARCodec arcodec(&pcm, bool(opt['o']));
 
-    if (!encode && !decode)
+    if (!opt['e'] && !opt['d'])
     {
         // Best effort copy synthesis
         var a = pcm.read(ifile);
@@ -73,7 +53,7 @@ int main(int argc, char** argv)
         pcm.write(ofile, signal);
     }
 
-    if (encode)
+    if (opt['e'])
     {
         // Read the file, hanging on to the attributes
         var a = pcm.read(ifile);
@@ -81,7 +61,7 @@ int main(int argc, char** argv)
         arcodec.write(ofile, params);
     }
 
-    if (decode)
+    if (opt['d'])
     {
         // Read the params
         var params = arcodec.read(ifile);

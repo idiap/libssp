@@ -16,13 +16,17 @@ using namespace ssp;
 
 int main(int argc, char** argv)
 {
-    // Args
-    var arg(argc, argv);
+    // Options
+    lube::Option opt("specplot: plot sound spectrogram");
+    opt("Waveform file is the first argument");
+    opt.parse(argc, argv);
 
     // Read the waveform from file
     PCM pcm;
-    ind fi = arg.index("-f");
-    var wav = fi ? arg[fi+1] : "arctic_a0001.wav";
+    var arg = opt.args();
+    if (arg.size() < 1)
+        opt.usage(0);
+    var wav = arg[0];
     var a = pcm.read(wav);
 
     // Frame it

@@ -12,6 +12,7 @@
 
 
 #include <lube.h>
+#include <lube/dft.h>
 #include <lube/config.h>
 #include "filter.h"
 
