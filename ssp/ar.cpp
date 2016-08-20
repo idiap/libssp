@@ -214,21 +214,10 @@ void ToLSP::vector(var iVar, var& oVar) const
     {
         if (lube::imag(qr[i]) >= 0.0f)
             oVar(j++) = qr[i].arg();
-        if (j >= mSize)
-        {
-            // Some sort of error
-            std::cout << "j overflow" << std::endl;
-            break;
-        }
         if (lube::imag(pr[i]) >= 0.0f)
             oVar(j++) = pr[i].arg();
-        if (j >= mSize)
-        {
-            // Some sort of error
-            std::cout << "j overflow" << std::endl;
-            break;
-        }
     }
+    assert(j == mSize);
 
     // We can't rely on roots() being ordered, but it's helpful to have 0 and
     // pi at the ends.

@@ -23,6 +23,7 @@ Filter::Filter()
 }
 
 Filter::Filter(int iNNumer, float* iNumer, int iNDenom, float* iDenom)
+    : Filter()
 {
     set(iNNumer, iNumer, iNDenom, iDenom);
 }
@@ -37,15 +38,19 @@ Filter::~Filter()
     mDenom = 0;
 }
 
+/**
+ * Set the filter coefficients.  The input denominator (array a) should begin
+ * with 1.0; this is discarded.  The numerator is stored in full.
+ */
 void Filter::set(int iNNumer, float* iNumer, int iNDenom, float* iDenom)
 {
-    if (iNumer)
+    if (iNNumer > 0)
     {
         mNNumer = iNNumer;
         mNumer = new float[mNNumer];
         blas::copy(mNNumer, iNumer, mNumer);
     }
-    if (iDenom)
+    if (iNDenom > 1)
     {
         mNDenom = iNDenom-1;
         mDenom = new float[mNDenom];

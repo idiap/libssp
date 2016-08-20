@@ -9,7 +9,6 @@
 
 #include <cassert>
 #include <fstream>
-#include <lube/var.h>
 #include <lube/module.h>
 
 namespace libube
