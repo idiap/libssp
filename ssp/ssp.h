@@ -107,7 +107,7 @@ namespace ssp
         void scalar(const var& iVar, var& oVar) const;
     private:
         lube::DFT mDFT;
-        lube::DFT mIDFT;
+        lube::IDFT mIDFT;
     };
 
     class Frame : public UnaryFunctor

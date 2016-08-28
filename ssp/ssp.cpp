@@ -280,7 +280,7 @@ var ssp::BinaryFunctor::alloc(var iVar1, var iVar2) const
 }
 
 Autocorrelation::Autocorrelation(int iSize)
-    : UnaryFunctor(iSize), mDFT(iSize), mIDFT(iSize, true)
+    : UnaryFunctor(iSize), mDFT(iSize), mIDFT(iSize)
 {}
 
 void Autocorrelation::scalar(const var& iVar, var& oVar) const
