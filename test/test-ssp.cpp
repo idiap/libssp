@@ -36,7 +36,7 @@ int main(int argc, char** argv)
     cout << "fv: " << fv << endl;
 
     Hamming W(4, true);
-    w = var(W);
+    var w = var(W);
     cout << "w: " << w << endl;
 
     cout << f.atypeStr() << " " << w.atypeStr() << endl;
