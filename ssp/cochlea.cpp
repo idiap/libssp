@@ -29,21 +29,22 @@ Cochlea::Cochlea()
 void Cochlea::set(float iMinHz, float iMaxHz, int iNFilters, float iPeriod)
 {
     // Calculate the centre frequencies equally spaced on ERB rate scale.
-    // minHz and maxHz correspond to the range extremes.  We ignore the centres
-    // at those frequencies as would a mel filterbank implemented on a DFT.
+    // minHz and maxHz correspond to the range extremes.
     mNFilters = iNFilters;
     const bool mel = 0;
     float minRate = mel ? hzToMel(iMinHz) : hzToERBRate(iMinHz);
     float maxRate = mel ? hzToMel(iMaxHz) : hzToERBRate(iMaxHz);
     float step = (maxRate-minRate)/(mNFilters+1);  // +1 = mNFilters+2 filters
 
-    // Go backwards so the cascades work
-    for (int i=mNFilters-1; i>=0; --i)
+    // Go backwards, and include the extremes.  This is so the cascades work.
+    // The simpler filters should ignore indeces that are outside
+    // 0..mNFilters-1.
+    for (int i=mNFilters+1; i>=0; --i)
     {
-        float rate = minRate + step*(i+1);
+        float rate = minRate + step*i;
         float hz = mel ? melToHz(rate) : erbRateToHz(rate);
         float erb = hzToERB(hz);
-        set(i, hz, erb, iPeriod);
+        set(i-1, hz, erb, iPeriod);
     }
 
     // Zero all the states
@@ -104,6 +105,8 @@ void Holdsworth::set(float iMinHz, float iMaxHz, int iNFilters, float iPeriod)
 
 void Holdsworth::set(int iFilter, float iHz, float iBW, float iPeriod)
 {
+    if ((iFilter < 0) || (iFilter >= mNFilters))
+        return;
     filter& f = mFilter[iFilter];
     f.centre = iHz;
     f.coeff = 1.0f - std::exp(-2.0f*PI*iBW/bwScale(cOrder)*iPeriod);
@@ -186,6 +189,8 @@ void Lyon::set(float iMinHz, float iMaxHz, int iNFilters, float iPeriod)
 
 void Lyon::set(int iFilter, float iHz, float iBW, float iPeriod)
 {
+    if ((iFilter < 0) || (iFilter >= mNFilters))
+        return;
     filter& f = mFilter[iFilter];
     f.centre = iHz;
     float E = std::exp(-2.0f*PI*iBW/bwScale(cOrder)*iPeriod);
@@ -266,12 +271,20 @@ void Cascade::set(float iMinHz, float iMaxHz, int iNFilters, float iPeriod)
 
 void Cascade::set(int iFilter, float iHz, float iBW, float iPeriod)
 {
+    static float zHz = 0.0f;
+    static float zBW = 0.0f;
+    if ((iFilter < 0) || (iFilter >= mNFilters))
+    {
+        zHz = iHz;
+        zBW = iBW;
+        return;
+    }
     filter& f = mFilter[iFilter];
     f.centre = iHz;
     float Ep = std::exp(-2.0f*PI*iBW/bwScale(1)*iPeriod);
     float Cp = std::cos(2.0f*PI*iHz*iPeriod);
-    float Ez = std::exp(-2.0f*PI*iBW/bwScale(1)*2.0*iPeriod);
-    float Cz = std::cos(2.0f*PI*iHz*iPeriod*1.5);
+    float Ez = std::exp(-2.0f*PI*zBW/bwScale(1)*iPeriod);
+    float Cz = std::cos(2.0f*PI*zHz*iPeriod);
     float numer[3];
     float denom[3];
     float A = ( (1.0f - Ep*Cp*2 + Ep*Ep) /
@@ -283,6 +296,8 @@ void Cascade::set(int iFilter, float iHz, float iBW, float iPeriod)
     denom[1] = -Ep*Cp*2;
     denom[2] =  Ep*Ep;
     f.filter.set(3, numer, 3, denom);
+    zHz = iHz;
+    zBW = iBW;
 }
 
 void Cascade::reset()
