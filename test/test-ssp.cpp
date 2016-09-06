@@ -10,6 +10,7 @@
 #include <lube.h>
 #include "ssp/ssp.h"
 #include "ssp/ar.h"
+#include "ssp/window.h"
 
 using namespace std;
 using namespace ssp;
@@ -34,8 +35,8 @@ int main(int argc, char** argv)
     var fv = f.view({4, 4}, 0);
     cout << "fv: " << fv << endl;
 
-    var w = hamming(5);
-    w.pop();
+    Hamming W(4, true);
+    w = var(W);
     cout << "w: " << w << endl;
 
     cout << f.atypeStr() << " " << w.atypeStr() << endl;
@@ -52,7 +53,7 @@ int main(int argc, char** argv)
     var bv = B.view({1,3}, 0);
     cout << "B(0): " << bv << endl;
 
-    lube::DFT idft(4, true);
+    lube::IDFT idft(4);
     var C = idft(B);
     var cv = C.view({1,4}, 0);
     cout << "C(0): " << cv << endl;
