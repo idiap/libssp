@@ -99,15 +99,29 @@ namespace ssp
     };
 
 
-    class Autocorrelation : public UnaryFunctor
+    /**
+     * Autocorrelation using periodogram method
+     */
+    class AutocorrelationP : public UnaryFunctor
     {
     public:
-        Autocorrelation(int iSize);
+        AutocorrelationP(int iSize);
     protected:
         void scalar(const var& iVar, var& oVar) const;
     private:
         lube::DFT mDFT;
         lube::IDFT mIDFT;
+    };
+
+    /**
+     * Autocorrelation using direct method
+     */
+    class Autocorrelation : public UnaryFunctor
+    {
+    public:
+        Autocorrelation(int iSize);
+    protected:
+        void vector(var iVar, ind iOffsetI, var& oVar, ind iOffsetO) const;
     };
 
     class Frame : public UnaryFunctor

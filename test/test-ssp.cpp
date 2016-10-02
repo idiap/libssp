@@ -58,9 +58,24 @@ int main(int argc, char** argv)
     var cv = C.view({1,4}, 0);
     cout << "C(0): " << cv << endl;
 
-    Autocorrelation ac(4);
+#if 0
+Matlab:
+f =
+   1.0e-04 *
+    0.0732    0.4944    0.9155    0.1648
+>> xcorr(f)
+ans =
+   1.0e-07 *
+    0.0012    0.0149    0.0640    0.1115    0.0640    0.0149    0.0012
+#endif
+    cout << "f(0): " << f.view({1,4}, 0) << endl;
+    AutocorrelationP acp(4);
+    var ACP = acp(f);
+    var acpv = ACP.view({1,4}, 0);
+    cout << "acp(0): " << acpv << endl;
+    Autocorrelation ac(3);
     var AC = ac(f);
-    var acv = AC.view({1,4}, 0);
+    var acv = AC.view({1,3}, 0);
     cout << "ac(0): " << acv << endl;
 
     A.log();

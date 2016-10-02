@@ -254,7 +254,7 @@ ssp::UnaryFunctor::UnaryFunctor(int iSize)
 
 var ssp::UnaryFunctor::alloc(var iVar) const
 {
-    // Allocate an output array
+    // Allocate an output array; size mSize
     var s = iVar.shape();
     s[s.size()-1] = mSize;
     var r = view(s, iVar.at(0));
@@ -279,16 +279,47 @@ var ssp::BinaryFunctor::alloc(var iVar1, var iVar2) const
     return r;
 }
 
-Autocorrelation::Autocorrelation(int iSize)
+AutocorrelationP::AutocorrelationP(int iSize)
     : UnaryFunctor(iSize), mDFT(iSize), mIDFT(iSize)
 {}
 
-void Autocorrelation::scalar(const var& iVar, var& oVar) const
+void AutocorrelationP::scalar(const var& iVar, var& oVar) const
 {
+    // Lube's IDFT has a division by N.  Still need to normalise the
+    // autocorrelation though.
     var tmp = mDFT(iVar);
     tmp.norm();
     tmp /= mSize;
     mIDFT(tmp, oVar);
+}
+
+Autocorrelation::Autocorrelation(int iSize)
+    : UnaryFunctor(iSize)
+{}
+
+void
+Autocorrelation::vector(var iVar, ind iOffsetI, var& oVar, ind iOffsetO) const
+{
+    if (iVar.is(oVar))
+        throw lube::error("Autocorrelation: input and output must be different");
+    // s = input vector size
+    // mSize = output vector size = order + 1
+    int n = iVar.shape(iVar.dim()-1);
+    int p = mSize-1;
+    int np = n - p;
+    if (np < 1)
+        throw lube::error("Autocorrelation: order too large for vector size");
+    float* iv = iVar.ptr<float>(iOffsetI);
+    float* ov = oVar.ptr<float>(iOffsetO);
+    for (int i=0; i<mSize; i++)
+    {
+        // Dot product; could be optimised.  And note that autocorrelation is
+        // normalised by definition.
+        float sum = 0.0f;
+        for (int j=n-1; j>=p; j--)
+            sum += iv[j] * iv[j-i];
+        ov[i] = sum / np;
+    }
 }
 
 var OverlapAdd::alloc(var iVar) const
