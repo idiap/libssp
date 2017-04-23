@@ -33,7 +33,7 @@ list(APPEND LIBSSP_TARGETS ssp-shared)
 
 # HTK file module
 add_library(htk-lib MODULE htkfile.cpp)
-target_link_libraries(htk-lib)
+target_link_libraries(htk-lib ssp-shared)
 set_target_properties(htk-lib
   PROPERTIES OUTPUT_NAME "htk"
   )
