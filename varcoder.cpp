@@ -29,7 +29,7 @@ int main(int argc, char** argv)
     // Configuration
     lube::Config cnf;
     if (opt['C'] != "/dev/null")
-        cnf.read(opt['C']);
+        cnf.configFile(opt['C']);
 
     // Register rest of the command line
     var arg = opt.args();
@@ -41,7 +41,7 @@ int main(int argc, char** argv)
     var ifile = arg.pop();
 
     // AR codec
-    PCM pcm(cnf);
+    PCM pcm;
     ARCodec arcodec(&pcm, bool(opt['o']));
 
     if (!opt['e'] && !opt['d'])

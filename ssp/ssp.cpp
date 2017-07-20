@@ -20,13 +20,11 @@ using namespace ssp;
 /**
  * Constructor setting sample rate to default (undefined) value.
  */
-PCM::PCM(lube::Config& iConfig, var iStr)
-    : Config(iConfig)
+PCM::PCM(var iStr)
+    : Config(iStr)
 {
-    mStr = iStr;
-    mAttr = config();
-    mAttr["frameSize"] = 256;
-    mAttr["rate"] = 16000;
+    mAttr["frameSize"] = config("frameSize", 256);
+    mAttr["rate"] = config("rate", 16000);
 }
 
 

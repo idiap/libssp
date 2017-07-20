@@ -30,8 +30,7 @@ namespace ssp
     class PCM : public lube::Config
     {
     public:
-        PCM(var iStr="PCM") { mStr = iStr; };
-        PCM(lube::Config& iConfig, var iStr="PCM");
+        PCM(var iStr="PCM");
 
         enum {
             AT_LEAST,
