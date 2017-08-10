@@ -16,6 +16,14 @@ set(CMAKE_CXX_FLAGS "-Wall -Werror -std=c++11")
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+if (NOT EXISTS "${CMAKE_MODULE_PATH}/FindLibUBE.cmake")
+  message(STATUS "Downloading FindLibUBE.cmake")
+  file(DOWNLOAD
+    "https://github.com/pgarner/libube/raw/master/cmake/FindLibUBE.cmake"
+    "${CMAKE_MODULE_PATH}/FindLibUBE.cmake"
+    )
+endif()
+
 if (NOT LIBUBE_FOUND)
   find_package(LibUBE REQUIRED)
 endif (NOT LIBUBE_FOUND)
