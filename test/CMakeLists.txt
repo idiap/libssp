@@ -40,3 +40,10 @@ add_test(
   NAME cochlea
   COMMAND ${CMAKE_COMMAND} -D TEST_DIR=${TEST_DIR} -P ${TEST_DIR}/test-cochlea.cmake
   )
+
+# Allows the test to find the dynamic library.  Doesn't feel too portable.
+set_property(
+  TEST ssp
+  PROPERTY ENVIRONMENT
+  LD_LIBRARY_PATH="${CMAKE_BINARY_DIR}/ssp:$ENV{LD_LIBRARY_PATH}"
+  )
